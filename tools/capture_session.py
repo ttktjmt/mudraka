@@ -140,9 +140,17 @@ async def run(args: argparse.Namespace) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # --- find device ---
-    address = args.address
-    name = None
-    if not address:
+    # Always resolve to a BLEDevice object and connect with *that* (not a bare
+    # address string): on macOS/CoreBluetooth, BleakClient(address_str) fails with
+    # BleakDeviceNotFoundError unless the peripheral was discovered this session.
+    if args.address:
+        print(f"Looking up {args.address} (timeout {args.scan_timeout}s)...")
+        dev = await BleakScanner.find_device_by_address(args.address, timeout=args.scan_timeout)
+        if not dev:
+            print("That address was not found in a scan. On macOS use the UUID the "
+                  "scan prints (not a MAC), or omit --address to scan by name.")
+            return 1
+    else:
         print(f"Scanning for '{args.name_filter}' (timeout {args.scan_timeout}s)...")
         dev = await BleakScanner.find_device_by_filter(
             lambda d, ad: bool(d.name and args.name_filter.lower() in d.name.lower()),
@@ -151,8 +159,8 @@ async def run(args: argparse.Namespace) -> int:
         if not dev:
             print("No Mudra Link found. Power it on / bring it close, or pass --address.")
             return 1
-        address, name = dev.address, dev.name
-        print(f"Found {name} ({address})")
+    address, name = dev.address, dev.name
+    print(f"Found {name} ({address})")
 
     rec = SessionRecorder(out_dir)
     stop = asyncio.Event()
@@ -166,7 +174,7 @@ async def run(args: argparse.Namespace) -> int:
             pass
 
     print(f"Connecting to {address}...")
-    async with BleakClient(address) as client:
+    async with BleakClient(dev) as client:   # pass the BLEDevice, not the address string
         if args.post_connect_delay:
             await asyncio.sleep(args.post_connect_delay)
 
@@ -222,6 +230,8 @@ async def run(args: argparse.Namespace) -> int:
     rec.write_meta({
         "sample_type": f"{args.bits}bit",
         "enabled_streams": args.enable,
+        "device_name": name,
+        "address": address,
         "mtu": mtu,
         "fw_version": fw,
         "hand": args.hand,
