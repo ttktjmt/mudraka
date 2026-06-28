@@ -14,3 +14,6 @@ tmp
 # Python
 __pycache__/
 *.pyc
+
+# Build
+/build/

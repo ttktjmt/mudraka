@@ -84,3 +84,8 @@ vendor-dependent and uncertain; **~834 Hz is what this firmware delivers.**
 - **2026-06-25** — Raw capture resolves it: **~834 Hz** (layer A, fw 6.0.11.5), not
   throughput-limited. Seed updated to 834. Below the ≥2000 Hz target → viability
   pending the full-API/license lever before any device-replacement decision.
+- **2026-06-29** — Width (16/24-bit) and rate (834/2080 Hz) are **independent axes**;
+  24-bit ≠ 2080 Hz, and no BLE command sets the rate.
+- **2026-06-29** — **Decision: proceed at 834 Hz** (build decoder + oracle against the
+  known 16-bit layout; the rate-agnostic engine is robust to a later change) **while
+  querying the vendor** about 2080 Hz / dev-kit access in parallel.

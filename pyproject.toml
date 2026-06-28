@@ -1,0 +1,28 @@
+# Python wheel built from the C++ core via scikit-build-core + nanobind.
+# See docs/BUILD.md / docs/FFI_BINDINGS.md.  Build: `pip install .`  (needs a C++17 compiler)
+[build-system]
+requires = ["scikit-build-core>=0.10", "nanobind>=2.1"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "mudraka"
+version = "0.1.0"
+description = "C++ sEMG engine for Mudra Link raw SNC decoding"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "TBD" }
+authors = [{ name = "ttktjmt" }]
+dependencies = []
+
+[project.optional-dependencies]
+numpy = ["numpy>=1.23"]
+
+[tool.scikit-build]
+minimum-version = "0.10"
+cmake.version = ">=3.20"
+build-dir = "build/skbuild/{wheel_tag}"
+wheel.packages = ["python/mudraka"]
+
+[tool.scikit-build.cmake.define]
+MUDRAKA_BUILD_PYTHON = "ON"
+MUDRAKA_BUILD_TESTS = "OFF"
