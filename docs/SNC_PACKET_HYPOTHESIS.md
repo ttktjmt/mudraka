@@ -58,12 +58,18 @@ struct SncLayout {
   notification interval (22070 µs). 21620 µs / 18 samples → 832.6 Hz.
 - **Delivered rate:** 50 004 samples / 59.95 s = **834.1 Hz** (matches the trailer
   and the layer-B ~852 Hz from `tmp/teleop_*.h5`).
+- **Stable across conditions & requests:** `24bit_strong_contraction`, `16bit_rest`,
+  `24bit_rest` all give the same 112-byte / 18-sample int16 layout at 834.7 Hz; the
+  rest captures show smooth low-amplitude de-interleaved signals (layout holds
+  unsaturated too).
 
 ## Anomalies / open
-1. **24-bit did not engage.** We sent `SET_SAMPLE_TYPE 22 01` (=24bit per Prodilink)
-   yet received int16. Either the PP mapping is wrong, fw `6.0.11.5` ignores it, or
-   24-bit is license-gated. (24-bit would mean 9 B/sample → 12 samples/notification →
-   ~556 Hz: higher resolution, **lower** rate.)
+1. **`SET_SAMPLE_TYPE` has no effect at this access level (confirmed 2026-06-29).**
+   Captures sending `22 00` (`16bit_rest`) and `22 01` (`24bit_rest`) are
+   structurally identical: both int16, 18 samples/notification, 834.7 Hz. So 24-bit
+   is **not obtainable** here — strong evidence the command (and higher capability) is
+   **license-gated**. (Were 24-bit honored it would be 9 B/sample → 12 samples →
+   ~556 Hz: more resolution, lower rate.)
 2. **Rate ≈ 834 Hz, not the official 2080 Hz** — see `CLOCK_MODEL.md` viability. The
    open lever is "full API access" / a license unlocking a higher rate.
 3. **Confirm against the oracle**: is `SNC_NO_FACTOR` bit-exact these int16 values,
@@ -75,3 +81,6 @@ struct SncLayout {
 - **2026-06-25** — Provisional layout from real capture: 18×3 int16 LE interleaved
   + 4-byte LE µs trailer, no header; rate ≈ 834 Hz; 16-bit (24-bit not engaged).
   Pending oracle + disassembly confirmation.
+- **2026-06-29** — `SET_SAMPLE_TYPE` confirmed **no-op** at this access level (16bit
+  vs 24bit requests structurally identical); layout confirmed stable across rest +
+  contraction. 24-bit / higher rate are presumed license-gated.

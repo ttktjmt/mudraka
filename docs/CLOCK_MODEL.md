@@ -52,6 +52,12 @@ any device-replacement decision, the **one remaining lever** is **"full API acce
 a license** possibly unlocking a higher rate (the friend's hypothesis; also why
 24-bit did not engage). See `DECODE_VERIFICATION.md` item #2.
 
+**Strengthened (2026-06-29):** `SET_SAMPLE_TYPE` is a no-op at this access level
+(16-bit and 24-bit requests give byte-identical 834 Hz streams — see
+`SNC_PACKET_HYPOTHESIS.md`). The device is **locked to 16-bit / 834 Hz without full
+API access**, so the viability verdict hinges entirely on whether a license unlocks
+the higher rate. This is now the single gating question for the device choice.
+
 **Decision (2026-06-25):**
 - `nominal_rate` seed updated to **834 Hz** (measured); regression still governs at
   runtime.
