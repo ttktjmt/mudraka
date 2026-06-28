@@ -132,6 +132,16 @@ A self-contained **bleak** recorder (no Prodilink dependency). It:
 Sample-type mapping confirmed from Prodilink (`device.py`: `{"16bit":0,"24bit":1}`).
 Run it on the actual target OS to emulate production.
 
+## Storage
+
+Fixtures are **committed to the repo** (decision 2026-06-25, option A) so the
+golden-driven tri-target tests run with no external fetch. One full session is
+~0.8 MB; the full coverage matrix is a few MB — fine for git for now.
+
+If the corpus grows large later, migrate to **git-lfs** or host the raw captures on
+a platform like **Hugging Face** (datasets) and keep only the small `expected.jsonl`
+goldens in-repo. Not needed yet.
+
 ## Not part of the canonical fixtures
 
 An nRF Sniffer / HCI snoop `pcap` is an **optional discovery cross-check** for
@@ -150,3 +160,6 @@ capture is).
   directions (rx + tx), to emulate production and enable full replay into the oracle.
   `index.json` gains `uuid`/`dir`; fixtures move to `fixtures/sessions/<name>/`. Tool
   = self-contained `tools/capture_session.py` (bleak). Capture on the target OS.
+- **2026-06-25** — Fixtures are **committed to the repo** (option A). If the corpus
+  grows large, migrate to git-lfs or host raw captures on Hugging Face and keep only
+  the small goldens in-repo.

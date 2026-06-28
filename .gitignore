@@ -7,7 +7,6 @@ MudraAndroidSDK.aar
 
 # Logs
 *.log
-fixtures
 
 # Temporary files
 tmp

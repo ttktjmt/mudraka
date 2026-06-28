@@ -1,0 +1,25 @@
+{
+  "sample_type": "24bit",
+  "enabled_streams": [
+    "snc"
+  ],
+  "device_name": "Mudra Band 43-8489",
+  "address": "C0527AA2-FFFB-9253-6FBB-485BC676FD4E",
+  "mtu": 140,
+  "fw_version": "6.0.11.5",
+  "hand": "right",
+  "serial": "3030303032313239",
+  "condition": "strong_contraction",
+  "note": null,
+  "platform": "darwin",
+  "duration_s": 64.171,
+  "n_frames": 2797,
+  "frames_by_uuid": {
+    "0000fff1-0000-1000-8000-00805f9b34fb": 17,
+    "0000fff4-0000-1000-8000-00805f9b34fb": 2778,
+    "00002a19-0000-1000-8000-00805f9b34fb": 2
+  },
+  "capture_tool": "tools/capture_session.py",
+  "capture_tool_version": "0.1",
+  "captured_at": "2026-06-28T12:34:59.178027+00:00"
+}
