@@ -58,6 +58,16 @@ a license** possibly unlocking a higher rate (the friend's hypothesis; also why
 API access**, so the viability verdict hinges entirely on whether a license unlocks
 the higher rate. This is now the single gating question for the device choice.
 
+**No BLE lever for rate (2026-06-29):** the full reverse-engineered firmware command
+set (53 opcodes) contains **no SNC sample-rate command** — only `SET_SAMPLE_TYPE`
+(16/24-bit, a no-op for us) and `HID_FREQUENCY` (HID pointer, unrelated to SNC). So
+the rate **cannot be raised by any BLE command we can send**. If 2080 Hz exists at
+all, it is gated outside the known command set — i.e. a **vendor / dev-kit-program /
+special-firmware** matter (business-level "full API access"), **not** something we
+can unlock in software. The friend's *licensed* official SDK also yielded ~852 Hz,
+though their tier may also have been below "full API". Treat 2080 Hz as
+vendor-dependent and uncertain; **~834 Hz is what this firmware delivers.**
+
 **Decision (2026-06-25):**
 - `nominal_rate` seed updated to **834 Hz** (measured); regression still governs at
   runtime.
