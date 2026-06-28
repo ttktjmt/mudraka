@@ -61,7 +61,7 @@ resolve; known fields so far:
 struct StreamProfile {                              // device/signal descriptor (N-channel)
   uint32_t                 channels        = 3;     // device-agnostic; Mudra = 3
   std::vector<std::string> channel_names   = {"ulnar","median","radial"};
-  double                   nominal_rate_hz = 2080;  // SEED only; true rate is regression-measured
+  double                   nominal_rate_hz = 834;   // SEED only (measured raw; was 2080 spec); regression governs
   uint8_t                  sample_width_bits = 24;  // 16 or 24 (SET_SAMPLE_TYPE); drives decode
   std::vector<double>      scale           = {0.035,0.035,0.035}; // µV/count — PROVISIONAL, unverified
   std::string              unit            = "uV";

@@ -32,26 +32,31 @@ Three numbers, three layers — do not conflate them:
 |-------|--------|-------|
 | **2080 Hz** | Official dev-kit spec page (also 0.035 µV sensitivity, 6+2 DRL electrodes) | ADC / raw sampling rate (claimed) |
 | **~1000 Hz** | companion-SDK protocol JSON / signal spec ("nominal") | layer-B effective `frequency` |
-| **~852 Hz** | **measured** from `tmp/teleop_20260525_181328.h5` (official Python SDK recording) | **layer B** (values ∈ [−1, +1]) |
+| **~852 Hz** | measured from `tmp/teleop_20260525_181328.h5` (official Python SDK) | layer B (values ∈ [−1, +1]) |
+| **~834 Hz** | **measured from a raw `0xfff4` capture** (`fixtures/sessions/24bit_strong_contraction`, fw 6.0.11.5) | **layer A** (raw int16) |
 
-**Key finding:** the 852 Hz measurement is from the **official Python SDK = layer B
-(post-compute, normalized floats)**. It does **not** bound the raw `0xfff4` wire
-rate that mudraka decodes (layer A). The compute layer (NN/filtering) plausibly
-decimates a faster raw stream down to ~850–1000 Hz. Bandwidth is not the limit
-(2080 Hz × 3ch × 3B ≈ 19 KB/s, trivial for BLE).
+**RESOLVED (2026-06-25): the raw rate is ≈ 834 Hz, not 2080 Hz.** A real raw capture
+(see `SNC_PACKET_HYPOTHESIS.md`) shows 18 samples × 3ch int16 + a µs trailer per
+notification, 50 004 samples / 59.95 s = **834.1 Hz**; the trailer timestamp agrees
+(21620 µs / 18 ≈ 832.6 Hz). This is **layer A** (the raw stream mudraka decodes), so
+it is the authoritative figure — and it matches the layer-B ~852 Hz (little/no
+decimation between layers).
+
+**Not a throughput artifact:** the notification is 112 B < MTU 140, so the device is
+sending exactly what it sampled per connection interval — 834 Hz is a genuine
+firmware output rate, **not** MTU-clipped. A larger MTU will not raise it.
+
+### Viability
+834 Hz is **below the ≥ ~2000 Hz** the project needs for useful EMG analysis. Before
+any device-replacement decision, the **one remaining lever** is **"full API access" /
+a license** possibly unlocking a higher rate (the friend's hypothesis; also why
+24-bit did not engage). See `DECODE_VERIFICATION.md` item #2.
 
 **Decision (2026-06-25):**
-- Seed `nominal_rate` provisionally at **2080 Hz** (official source); the **true rate
-  is whatever the regression measures from a real raw capture**.
-- The **true raw `0xfff4` rate is an open empirical question**, answered by the same
-  raw capture we already need for decode (see `CAPTURE_FIXTURE_FORMAT.md`).
-- That raw-rate measurement is the **project viability checkpoint**: if the raw rate
-  is confirmed `< 2000 Hz`, *then* reconsider the device. **Do not judge viability
-  from the layer-B 852 Hz figure** — it is the wrong layer.
-
-> Why it matters: the user's goal needs ≥ ~2000 Hz for useful EMG analysis; the
-> official spec claims 2080; the only observation so far is a layer-B 852. The raw
-> capture resolves it.
+- `nominal_rate` seed updated to **834 Hz** (measured); regression still governs at
+  runtime.
+- Viability verdict is **pending the license/full-API lever**; if 834 Hz is the
+  ceiling even with full access, reconsider the device.
 
 ## Decision log
 - **2026-06-25** — Timebase: sample-index authority; default deterministic
@@ -60,3 +65,6 @@ decimates a faster raw stream down to ~850–1000 Hz. Bandwidth is not the limit
 - **2026-06-25** — `nominal_rate` seed = 2080 Hz (provisional, official); real rate
   is regression-measured. Raw `0xfff4` rate is the viability checkpoint, judged from
   a raw capture — not from the layer-B 852 Hz recording.
+- **2026-06-25** — Raw capture resolves it: **~834 Hz** (layer A, fw 6.0.11.5), not
+  throughput-limited. Seed updated to 834. Below the ≥2000 Hz target → viability
+  pending the full-API/license lever before any device-replacement decision.

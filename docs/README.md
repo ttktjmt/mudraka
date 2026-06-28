@@ -17,9 +17,10 @@ responsibility**; use this map to find the right one.
 | [BUILD.md](BUILD.md) | **Build.** CMake topology (one core, three targets), packaging (scikit-build-core, Emscripten), dependency management. | Active |
 | [DIAGNOSTICS.md](DIAGNOSTICS.md) | **Health.** Error model (status-not-throw) and the diagnostics surface (`stats()`, drops, gaps, malformed frames). | Active |
 | [TEST_STRATEGY.md](TEST_STRATEGY.md) | **Verification.** Golden-driven tri-target decode parity, test depth, CI matrix. | Active |
+| [SNC_PACKET_HYPOTHESIS.md](SNC_PACKET_HYPOTHESIS.md) | **Layout.** Working hypothesis for the raw SNC byte layout (18×3 int16 + µs trailer), empirically derived; the decoder's swap point. | Provisional |
 
-> Documents not yet written (created as their design node is resolved):
-> `SNC_PACKET_HYPOTHESIS.md` (the swappable layout guess — blocked on disassembly/capture).
+> All planned docs now exist. `SNC_PACKET_HYPOTHESIS.md` awaits final confirmation
+> against the oracle (`SNC_NO_FACTOR`) + a `handleSnc` disassembly.
 
 ## How these docs are maintained
 
