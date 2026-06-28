@@ -1,0 +1,3 @@
+# Capture tooling deps (host-side; not a mudraka core dependency).
+# capture_session.py needs bleak; inspect_capture.py is stdlib-only.
+bleak>=0.22
