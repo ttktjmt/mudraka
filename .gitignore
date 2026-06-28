@@ -1,0 +1,12 @@
+# Assets
+MudraAndroidSDK.aar
+
+# Skills
+.agents
+.claude
+
+# Logs
+*.log
+
+# Temporary files
+tmp
