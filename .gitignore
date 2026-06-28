@@ -10,3 +10,6 @@ MudraAndroidSDK.aar
 
 # Temporary files
 tmp
+# Python
+__pycache__/
+*.pyc
