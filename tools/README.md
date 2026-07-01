@@ -17,9 +17,8 @@ pip install -r tools/requirements.txt
 ## `capture_session.py` — record a session
 
 Records **all characteristics, both directions** (device→host notifications *and*
-host→device command writes), so the capture emulates production and is replayable
-in full into the oracle. Run it on the **actual target OS** — the negotiated MTU and
-IMU routing are platform-specific.
+host→device command writes), so the capture emulates production. Run it on the
+**actual target OS** — the negotiated MTU and IMU routing are platform-specific.
 
 ### Step by step
 

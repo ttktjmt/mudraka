@@ -30,7 +30,7 @@ Three numbers, three layers — do not conflate them:
 
 | Value | Source | Layer |
 |-------|--------|-------|
-| **2080 Hz** | Official dev-kit spec page (also 0.035 µV sensitivity, 6+2 DRL electrodes) | ADC / raw sampling rate (claimed) |
+| **2080 Hz** | Website spec — but of a **different product, Mudra Pro** (not Mudra Link); confirmed by vendor 2026-07-02 | N/A to Mudra Link |
 | **~1000 Hz** | companion-SDK protocol JSON / signal spec ("nominal") | layer-B effective `frequency` |
 | **~852 Hz** | measured from `tmp/teleop_20260525_181328.h5` (official Python SDK) | layer B (values ∈ [−1, +1]) |
 | **~834 Hz** | **measured from a raw `0xfff4` capture** (`fixtures/sessions/24bit_strong_contraction`, fw 6.0.11.5) | **layer A** (raw int16) |
@@ -46,33 +46,15 @@ decimation between layers).
 sending exactly what it sampled per connection interval — 834 Hz is a genuine
 firmware output rate, **not** MTU-clipped. A larger MTU will not raise it.
 
-### Viability
-834 Hz is **below the ≥ ~2000 Hz** the project needs for useful EMG analysis. Before
-any device-replacement decision, the **one remaining lever** is **"full API access" /
-a license** possibly unlocking a higher rate (the friend's hypothesis; also why
-24-bit did not engage). See `DECODE_VERIFICATION.md` item #2.
+### Resolved (2026-07-02, vendor reply)
+**834 Hz is the retail Mudra Link's hard limit** — final, not gated by any license or
+command. The **2080 Hz** figure on the website is the spec of a **different product,
+Mudra Pro**, not Mudra Link. So there is no rate lever to chase and nothing to unlock.
 
-**Strengthened (2026-06-29):** `SET_SAMPLE_TYPE` is a no-op at this access level
-(16-bit and 24-bit requests give byte-identical 834 Hz streams — see
-`SNC_PACKET_HYPOTHESIS.md`). The device is **locked to 16-bit / 834 Hz without full
-API access**, so the viability verdict hinges entirely on whether a license unlocks
-the higher rate. This is now the single gating question for the device choice.
-
-**No BLE lever for rate (2026-06-29):** the full reverse-engineered firmware command
-set (53 opcodes) contains **no SNC sample-rate command** — only `SET_SAMPLE_TYPE`
-(16/24-bit, a no-op for us) and `HID_FREQUENCY` (HID pointer, unrelated to SNC). So
-the rate **cannot be raised by any BLE command we can send**. If 2080 Hz exists at
-all, it is gated outside the known command set — i.e. a **vendor / dev-kit-program /
-special-firmware** matter (business-level "full API access"), **not** something we
-can unlock in software. The friend's *licensed* official SDK also yielded ~852 Hz,
-though their tier may also have been below "full API". Treat 2080 Hz as
-vendor-dependent and uncertain; **~834 Hz is what this firmware delivers.**
-
-**Decision (2026-06-25):**
-- `nominal_rate` seed updated to **834 Hz** (measured); regression still governs at
-  runtime.
-- Viability verdict is **pending the license/full-API lever**; if 834 Hz is the
-  ceiling even with full access, reconsider the device.
+- **Target now: retail Mudra Link @ ~834 Hz, 16-bit.** `SET_SAMPLE_TYPE` is a no-op here.
+- **Mudra Pro (higher rate) is a future device**, supported when needed via a new
+  `IDecoder` + config — no Pro-specific code today (see `CONTEXT.md`).
+- 834 Hz is accepted for the current target; `nominal_rate` seed = 834, regression governs.
 
 ## Decision log
 - **2026-06-25** — Timebase: sample-index authority; default deterministic
@@ -86,6 +68,9 @@ vendor-dependent and uncertain; **~834 Hz is what this firmware delivers.**
   pending the full-API/license lever before any device-replacement decision.
 - **2026-06-29** — Width (16/24-bit) and rate (834/2080 Hz) are **independent axes**;
   24-bit ≠ 2080 Hz, and no BLE command sets the rate.
+- **2026-07-02** — Vendor reply: 834 Hz is the retail Mudra Link hard limit (final);
+  2080 Hz belongs to a separate product, **Mudra Pro**. No rate lever, no oracle/license.
+  Target Mudra Link now; Pro later via a new `IDecoder`.
 - **2026-06-29** — **Decision: proceed at 834 Hz** (build decoder + oracle against the
   known 16-bit layout; the rate-agnostic engine is robust to a later change) **while
   querying the vendor** about 2080 Hz / dev-kit access in parallel.

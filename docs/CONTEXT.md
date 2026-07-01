@@ -52,6 +52,15 @@ internals are not designed in this effort.
   neural inference, no µV scaling baked in (µV is a *derived* view using per-channel
   `scale`; the int32 counts remain the source of truth — mudraka never rounds them).
 
+## Device models
+
+- **Mudra Link (retail)** — the current target. ~834 Hz, 16-bit SNC (vendor-confirmed
+  hard limit). Decoded by `MudraDecoder` (see `SNC_PACKET_HYPOTHESIS.md`).
+- **Mudra Pro** — a separate, higher-rate product (the website's 2080 Hz spec). **Not
+  built now.** When needed it slots in as a **new `IDecoder` + config** — the engine
+  (ring, clock, stream, bindings) is already device- and rate-agnostic, so no
+  Pro-specific work exists today. This is the whole extension mechanism; nothing more.
+
 ## Distribution
 
 One C++ core fans out to two published artifacts (this is the dependency mechanism

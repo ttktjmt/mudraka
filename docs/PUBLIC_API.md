@@ -36,8 +36,8 @@ feed(frame: bytes/span<const uint8_t>, recv_time)   // one GATT notification pay
   (bleak notification handler; Web Bluetooth `characteristicvaluechanged`), so frame
   boundaries exist for free; a byte-stream API would force re-concatenation then
   re-splitting — wasted work and lost boundary info.
-- It matches the oracle harness, which replays `handle_data` per notification, so the
-  verification gate compares identical framing (see `DECODE_VERIFICATION.md`).
+- It matches how fixtures are captured and replayed (one notification per record), so
+  tests exercise the exact wire framing (see `DECODE_VERIFICATION.md`).
 - A general byte-stream re-sync layer cannot be designed responsibly while packet
   self-delimitation (length/sync/sequence) is unknown — that is part of the undecoded
   format. YAGNI until a capture proves it necessary.

@@ -14,16 +14,14 @@ transmits** — recorded once from the physical band and stored **untransformed*
 
 **Capture the entire communication session, not just SNC** (decision 2026-06-25):
 every byte on every characteristic, **both directions** (device→host notifications
-*and* host→device command writes), even traffic irrelevant to EMG. Reasons:
-- **Emulate production faithfully** — the real environment runs multiple streams and
-  control traffic concurrently; SNC framing/timing can depend on that context.
-- **Full replay into the oracle** — the `MudraSDK` lib's `handle_data` may rely on
-  state established by COMMAND/MESSAGE traffic; replaying the whole session (not just
-  SNC) reproduces the real conditions.
+*and* host→device command writes), even traffic irrelevant to EMG, to **emulate
+production faithfully** — the real environment runs multiple streams and control
+traffic concurrently, and the tx command writes document what was enabled. (Decode
+tests just filter for SNC.)
 
 - `capture.bin` holds the **exact bytes** seen on the wire (no hex, no re-encoding).
-- `expected.*` is **not synthetic**: it is the output of the real `MudraSDK` compute
-  library run over the captured SNC bytes (see `DECODE_VERIFICATION.md` §3).
+- `expected.*` is the **native reference decode** of the captured SNC bytes (the
+  parity golden for the python/wasm targets — see `DECODE_VERIFICATION.md`).
 
 Synthetic byte streams are **not** used as test fixtures.
 
@@ -36,13 +34,13 @@ fixtures/sessions/<name>/     # <name> e.g. 24bit_strong_contraction
   capture.bin     # raw input  — exact wire bytes, all characteristics, both directions
   index.json      # framing    — per-event boundaries: uuid, direction, time
   meta.json       # conditions — how/what was captured (incl. negotiated MTU)
-  expected.jsonl  # oracle out — generated offline from the SNC frames (the answer key)
+  expected.jsonl  # parity golden — the native reference decode of the SNC frames
 ```
 
 (`fixtures/` sits at the mudraka package root — see `CONTEXT.md` source layout.)
 
 Each file has a single responsibility: **input / framing / conditions / answer.**
-SNC-only consumers (decode tests, oracle) filter `index.json` by the SNC UUID.
+SNC-only consumers (decode tests) filter `index.json` by the SNC UUID.
 
 ### `capture.bin`
 The concatenation, **in arrival order**, of every event payload — all
@@ -96,13 +94,13 @@ Capture conditions and provenance.
 > + decoder carry buffer already handle.
 
 ### `expected.jsonl`
-Generated offline by the `MudraSDK` oracle harness — never hand-authored. One JSON
-object per emitted SNC sample (aligned to `SNC_TS`):
+The **native reference decode** of the SNC frames (parity golden for python/wasm) —
+generated, never hand-authored. One JSON object per sample:
 ```json
-{ "snc_ts": 123456, "no_factor": [u, m, r] }
+{ "snc_ts": 123456, "sample": [u, m, r] }
 ```
-`no_factor` = recorder `SNC_NO_FACTOR1..3` (layer A). The gate asserts mudraka's
-int32 decode of `capture.bin` equals this, bit-exact.
+`sample` = the decoded int32 `[ulnar, median, radial]`. Parity: the python/wasm
+targets must reproduce this bit-exact.
 
 ---
 
@@ -157,7 +155,7 @@ capture is).
 - **2026-06-24** — Fixtures are real device recordings; `expected` is the real lib's
   output over them; no synthetic fixtures; sniffer pcap is non-canonical.
 - **2026-06-25** — Capture the **full session**: all characteristics, both
-  directions (rx + tx), to emulate production and enable full replay into the oracle.
+  directions (rx + tx), to emulate production.
   `index.json` gains `uuid`/`dir`; fixtures move to `fixtures/sessions/<name>/`. Tool
   = self-contained `tools/capture_session.py` (bleak). Capture on the target OS.
 - **2026-06-25** — Fixtures are **committed to the repo** (option A). If the corpus

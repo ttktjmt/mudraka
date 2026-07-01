@@ -19,17 +19,18 @@ One C++ core fans out to two distributions: **npm** (Emscripten→WASM) and **Py
 | Native C++ core (decoder, ring, clock, stream, diagnostics) | ✅ implemented, tested against real captures (22k+ assertions) |
 | Python binding (nanobind) | ✅ builds & verified end-to-end on real fixtures |
 | WASM binding (Embind) | ✅ written & CMake-wired (build needs the Emscripten toolchain) |
-| **SNC decode correctness** | ⚠️ **provisional** — strong empirical layout (16-bit, ~834 Hz); awaiting bit-exact confirmation against the official `SNC_NO_FACTOR` oracle (see [docs/DECODE_VERIFICATION.md](docs/DECODE_VERIFICATION.md)) |
+| **SNC decode** | ✅ decoded **directly**, empirically validated for Mudra Link (16-bit, ~834 Hz); no official lib/oracle (see [docs/DECODE_VERIFICATION.md](docs/DECODE_VERIFICATION.md)) |
 
-> Note: this firmware delivers **~834 Hz / 16-bit** SNC, not the advertised 2080 Hz
-> (a vendor/dev-kit matter — see [docs/CLOCK_MODEL.md](docs/CLOCK_MODEL.md)).
+> Target is the **retail Mudra Link** (~834 Hz / 16-bit — the vendor-confirmed limit).
+> The 2080 Hz figure is a **separate product, Mudra Pro**, a future target that slots in
+> as a new `IDecoder` — see [docs/CONTEXT.md](docs/CONTEXT.md).
 
 ## Layout
 
 ```
 include/mudraka/   public headers          src/        core implementation
 tests/             doctest suite           bindings/   python (nanobind) + wasm (embind)
-tools/             BLE capture + oracle     fixtures/   recorded test sessions
+tools/             BLE capture (bleak)      fixtures/   recorded test sessions
 docs/              design docs (indexed by docs/README.md)
 ```
 
@@ -65,5 +66,4 @@ cmake --build build-wasm                         # -> mudraka.js + mudraka.wasm
 ## Recording fixtures
 
 See [tools/README.md](tools/README.md) — `capture_session.py` records a full BLE
-session from a real band; `oracle_harness.py` will generate the golden `expected.jsonl`
-once the official MudraSDK library is available.
+session from a real band.

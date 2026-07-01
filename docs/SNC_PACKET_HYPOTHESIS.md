@@ -4,16 +4,16 @@
 > layout (the single swap point `MudraDecoder` is built around). Verification of it
 > lives in `DECODE_VERIFICATION.md`; the format on disk in `CAPTURE_FIXTURE_FORMAT.md`.
 >
-> **Status (2026-06-25): empirically derived from a real capture** — strong evidence,
-> but **not yet confirmed** against the oracle (`SNC_NO_FACTOR`) or a `handleSnc`
-> disassembly. Treat as the provisional, swappable layout.
+> **Status (2026-07-02): accepted layout for Mudra Link.** Empirically validated (see
+> `DECODE_VERIFICATION.md`); mudraka decodes it directly — no official-lib oracle. Still
+> the single swap point (`SncLayout`); a future Mudra Pro gets its own `IDecoder`.
 
 Source: `fixtures/sessions/24bit_strong_contraction/` — fw `6.0.11.5`, macOS,
 MTU 140, 2778 SNC notifications over ~60 s.
 
 ---
 
-## Layout (provisional)
+## Layout (accepted for Mudra Link)
 
 A SNC notification on `0xfff4` is a fixed **112 bytes**:
 
@@ -63,24 +63,22 @@ struct SncLayout {
   rest captures show smooth low-amplitude de-interleaved signals (layout holds
   unsaturated too).
 
-## Anomalies / open
-1. **`SET_SAMPLE_TYPE` has no effect at this access level (confirmed 2026-06-29).**
-   Captures sending `22 00` (`16bit_rest`) and `22 01` (`24bit_rest`) are
-   structurally identical: both int16, 18 samples/notification, 834.7 Hz. So 24-bit
-   is **not obtainable** here — strong evidence the command (and higher capability) is
-   **license-gated**. (Were 24-bit honored it would be 9 B/sample → 12 samples →
-   ~556 Hz: more resolution, lower rate.)
-2. **Rate ≈ 834 Hz, not the official 2080 Hz** — see `CLOCK_MODEL.md` viability. The
-   open lever is "full API access" / a license unlocking a higher rate.
-3. **Confirm against the oracle**: is `SNC_NO_FACTOR` bit-exact these int16 values,
-   or is there a "factor" between them? (`DECODE_VERIFICATION.md` items #4/#6.)
-4. **Trailer semantics**: assumed device-clock µs; confirm units/rollover (byte[3]
-   currently 0).
+## Notes / minor open
+1. **16-bit is fixed on Mudra Link.** `SET_SAMPLE_TYPE` (`22 00`/`22 01`) is a no-op —
+   both decode identically (int16, 18 samples, 834.7 Hz). Not a limitation to fight;
+   just how the retail device streams.
+2. **Rate ≈ 834 Hz is the Mudra Link limit** (vendor-confirmed 2026-07-02); the 2080 Hz
+   figure is the separate **Mudra Pro** product. See `CLOCK_MODEL.md`.
+3. **Channel order** `[ulnar, median, radial]` is a labeling assumption (values are
+   order-independent). See `DECODE_VERIFICATION.md`.
+4. **Trailer semantics**: device-clock µs (byte[3] currently 0) — assumption holds
+   across captures; revisit only if rollover matters.
 
 ## Decision log
 - **2026-06-25** — Provisional layout from real capture: 18×3 int16 LE interleaved
   + 4-byte LE µs trailer, no header; rate ≈ 834 Hz; 16-bit (24-bit not engaged).
   Pending oracle + disassembly confirmation.
-- **2026-06-29** — `SET_SAMPLE_TYPE` confirmed **no-op** at this access level (16bit
-  vs 24bit requests structurally identical); layout confirmed stable across rest +
-  contraction. 24-bit / higher rate are presumed license-gated.
+- **2026-06-29** — `SET_SAMPLE_TYPE` confirmed **no-op** (16bit vs 24bit identical);
+  layout stable across rest + contraction.
+- **2026-07-02** — Layout **accepted for Mudra Link**; decoded directly (no oracle).
+  834 Hz/16-bit is the retail device's spec; 2080 Hz is the separate Mudra Pro.

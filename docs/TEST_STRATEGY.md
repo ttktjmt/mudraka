@@ -9,14 +9,14 @@
 
 ## Golden-driven tri-target parity (decision 2026-06-25)
 
-The oracle generates `expected.jsonl` once; it is **committed to the repo as the
-single golden answer key**. All three implementations decode the same `capture.bin`
-and must match the golden **bit-exact**. This is both the pre-advancement gate
-(`DECODE_VERIFICATION.md`) and the permanent regression guard against the three
-targets diverging.
+The **native decode is the reference**; its output is committed as `expected.jsonl`,
+the single golden answer key. All three implementations decode the same `capture.bin`
+and must match it **bit-exact** — the permanent regression guard against the three
+targets diverging. (Semantic correctness of the decode itself rests on the empirical
+validation in `DECODE_VERIFICATION.md`, not an external oracle.)
 
 ```
-expected.jsonl (golden, from oracle)
+expected.jsonl (golden = native reference decode)
         ▲ compare bit-exact
         │
    ┌────┴────┬─────────────┬──────────────┐

@@ -12,7 +12,7 @@ target.
 
 ```
 mudraka_core            # STATIC/OBJECT lib · C++17 · zero third-party runtime deps
-  ├─ MUDRAKA_BUILD_TESTS   → native tests link mudraka_core (oracle gate + parity)
+  ├─ MUDRAKA_BUILD_TESTS   → native tests link mudraka_core (decode + parity)
   ├─ MUDRAKA_BUILD_PYTHON  → nanobind target links mudraka_core (driven by scikit-build-core)
   └─ MUDRAKA_BUILD_WASM    → embind target links mudraka_core (emcmake / emcc)
 ```
