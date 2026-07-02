@@ -16,4 +16,4 @@ target_link_options(mudraka_wasm PRIVATE
   "-sALLOW_MEMORY_GROWTH=1"
   "-sEXPORTED_RUNTIME_METHODS=['HEAP32','HEAPU8']"
   "-sEXPORTED_FUNCTIONS=['_malloc','_free']"
-  "-sENVIRONMENT=web,worker")
+  "-sENVIRONMENT=web,worker,node")  # node: so the same artifact runs the Node/CI parity check

@@ -39,8 +39,10 @@ truth, three thin shells).
     **in tests only**. The core never depends on JSON (it reads `.bin` only).
 - **nanobind** — obtained via pip and located through its CMake config
   (scikit-build-core convention).
-- **Emscripten** — external toolchain, developer/CI-installed; its version is pinned
-  in one place.
+- **Emscripten** — external toolchain, developer/CI-installed. **Pinned: 6.0.1**
+  (via emsdk: `emsdk install 6.0.1 && emsdk activate 6.0.1`). CI installs the same tag.
+  The WASM target sets `-sENVIRONMENT=web,worker,node` so one artifact serves both the
+  browser (npm consumer) and the Node parity check (`tools/verify_wasm.mjs`).
 - Reproducibility: all pins live in one place (consistent with the central-config
   ethos).
 

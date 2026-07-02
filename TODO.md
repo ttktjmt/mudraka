@@ -6,15 +6,27 @@ oracle). WASM binding written but unbuilt. See `README.md` / `docs/README.md`.
 
 ## Next (highest value first)
 
-- [ ] **Build & verify WASM** — needs Emscripten:
+- [x] **Build & verify WASM** — done with Emscripten 6.0.1 (pinned in `docs/BUILD.md`).
       `emcmake cmake -S . -B build-wasm -DMUDRAKA_BUILD_WASM=ON -DMUDRAKA_BUILD_TESTS=OFF && cmake --build build-wasm`,
-      then run under Node and exercise `feed`/`pullInto` on a fixture (mirror the
-      Python end-to-end check). Fix any embind marshaling issues (`bindings/wasm/`).
+      then `node tools/verify_wasm.mjs [fixture]` feeds SNC frames + drains via `feed`/`pullInto`
+      and asserts head==frames*18, malformed==0, non-zero signal. All 3 fixtures pass.
+      (Needed `-sENVIRONMENT=…,node` in `bindings/wasm/CMakeLists.txt` so the artifact loads under Node.)
 - [ ] **Tri-target parity, automated** — commit `expected.jsonl` = native reference
       decode per fixture; add python + wasm tests that assert bit-exact vs it.
       (`docs/TEST_STRATEGY.md`; native tests already pass.)
-- [ ] **CI** — GitHub Actions: native (cmake+ctest), Python (cibuildwheel), WASM
-      (emcc+node), all running the committed fixture corpus.
+- [ ] **CI — test matrix** — GitHub Actions on push/PR: native (cmake+ctest), Python
+      (cibuildwheel), WASM (emsdk 6.0.1 + `node tools/verify_wasm.mjs`), all running the
+      committed fixture corpus. Emscripten pinned via `emsdk activate 6.0.1`.
+- [ ] **CI — release automation (tag-driven)** — single source of version truth, then
+      publish on a `v*` git tag:
+      - **Version control**: one authoritative version (git tag → derived into
+        `pyproject.toml` + npm `package.json`, e.g. `setuptools-scm` / a small sync step)
+        so native/py/wasm never drift. Tag `vX.Y.Z` is the trigger.
+      - **PyPI**: cibuildwheel matrix → upload wheels + sdist via **Trusted Publishing**
+        (OIDC, no stored token).
+      - **npm**: build WASM (emsdk 6.0.1) → `npm publish` the packaged `.js`+`.wasm`
+        (needs the npm `package.json` TODO below) via `NPM_TOKEN` / OIDC provenance.
+      - Gate both on the test matrix passing first.
 
 ## Fixtures
 
