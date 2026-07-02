@@ -7,7 +7,7 @@
 #     `release.yml`, environment `pypi`.
 #   - npm: publish `mudraka` once manually to create the package (see docs/BUILD.md), then
 #     add a Trusted Publisher in the package settings → GitHub Actions, this repo,
-#     workflow `release.yml` (no environment). No NPM_TOKEN needed.
+#     workflow `release.yml`, environment `npm`. No NPM_TOKEN needed.
 name: Release
 
 on:
@@ -75,6 +75,7 @@ jobs:
   publish-npm:
     needs: test
     runs-on: ubuntu-latest
+    environment: npm  # must match the npm Trusted Publisher's configured environment
     permissions:
       id-token: write  # npm Trusted Publishing (OIDC) + automatic provenance
       contents: read

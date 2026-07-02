@@ -73,7 +73,8 @@ cibuildwheel + **Trusted Publishing** (OIDC, no stored token); npm also uses
   cd npm && npm login && npm publish --access public   # creates mudraka@0.1.0 (no provenance locally)
   ```
   Then on npmjs.com → package `mudraka` → Settings → **Trusted Publisher** → GitHub
-  Actions: repo `ttktjmt/mudraka`, workflow `release.yml` (leave environment blank).
+  Actions: repo `ttktjmt/mudraka`, workflow `release.yml`, environment `npm` (must match
+  the `environment:` on the `publish-npm` job).
   After that, every `vX.Y.Z` tag publishes via OIDC with provenance — no local step.
 
 ## Decision log
