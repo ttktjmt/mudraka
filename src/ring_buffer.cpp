@@ -7,7 +7,7 @@ namespace mudraka {
 RingBuffer::RingBuffer(uint32_t channels, uint64_t capacity_samples)
     : channels_(channels),
       capacity_(capacity_samples == 0 ? 1 : capacity_samples),
-      buf_(static_cast<std::size_t>(channels) * (capacity_samples == 0 ? 1 : capacity_samples)) {}
+      buf_(static_cast<std::size_t>(channels) * capacity_) {}
 
 void RingBuffer::push(const int32_t* sample) noexcept {
   const uint64_t idx = head_.load(std::memory_order_relaxed);  // single producer

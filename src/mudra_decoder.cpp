@@ -3,20 +3,7 @@
 namespace mudraka {
 namespace {
 
-// Read a signed little/big-endian integer of `bytes` width and sign-extend to int32.
-inline int32_t read_sample(const uint8_t* p, int bytes, bool little) {
-  uint32_t v = 0;
-  if (little) {
-    for (int i = 0; i < bytes; ++i) v |= static_cast<uint32_t>(p[i]) << (8 * i);
-  } else {
-    for (int i = 0; i < bytes; ++i) v = (v << 8) | p[i];
-  }
-  const int bits = bytes * 8;
-  const uint32_t sign_bit = 1u << (bits - 1);
-  if (v & sign_bit) v |= ~((1u << bits) - 1);  // sign-extend
-  return static_cast<int32_t>(v);
-}
-
+// Read an unsigned little/big-endian integer of `bytes` width.
 inline uint32_t read_u32(const uint8_t* p, int bytes, bool little) {
   uint32_t v = 0;
   if (little) {
@@ -25,6 +12,15 @@ inline uint32_t read_u32(const uint8_t* p, int bytes, bool little) {
     for (int i = 0; i < bytes; ++i) v = (v << 8) | p[i];
   }
   return v;
+}
+
+// Same, sign-extended to int32.
+inline int32_t read_sample(const uint8_t* p, int bytes, bool little) {
+  uint32_t v = read_u32(p, bytes, little);
+  const int bits = bytes * 8;
+  const uint32_t sign_bit = 1u << (bits - 1);
+  if (v & sign_bit) v |= ~((1u << bits) - 1);  // sign-extend
+  return static_cast<int32_t>(v);
 }
 
 }  // namespace
