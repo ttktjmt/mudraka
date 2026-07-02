@@ -4,83 +4,70 @@
 [![npm](https://img.shields.io/npm/v/mudraka?logo=npm)](https://www.npmjs.com/package/mudraka)
 
 A transport-agnostic **C++17 engine** that decodes the Mudra Link wristband's raw
-surface-EMG (SNC) stream into samples, buffers them, and serves them for real-time
-use. It is the shared core of three projects (this repo is **mudraka only**):
+surface-EMG (SNC) BLE stream into `int32` samples, buffers them in a ring, and serves
+the latest window for real-time use. **You** own the BLE connection and hand each
+notification's bytes to `feed()`; mudraka does the decode + buffering.
 
-- **mudraka** — this engine.
-- **mudra-lsl** — Python/PyPI wrapper publishing LSL (consumes the wheel).
-- **mudra-web-viewer** — Web Bluetooth live viewer (consumes the WASM/npm build).
+One core, two distributions: **PyPI** (nanobind wheel) and **npm** (Emscripten→WASM,
+with TypeScript types). Target is the retail **Mudra Link** (~834 Hz / 16-bit).
 
-One C++ core fans out to two distributions: **npm** (Emscripten→WASM) and **PyPI**
-(nanobind wheel). See **[docs/](docs/README.md)** for the full design (start with
-[docs/CONTEXT.md](docs/CONTEXT.md)).
-
-## Status
-
-| Part | State |
-|------|-------|
-| Native C++ core (decoder, ring, clock, stream, diagnostics) | ✅ implemented, tested against real captures (22k+ assertions) |
-| Python binding (nanobind) | ✅ **published to [PyPI](https://pypi.org/project/mudraka/)**; verified bit-exact on real fixtures |
-| WASM binding (Embind) | ✅ **published to [npm](https://www.npmjs.com/package/mudraka)** (with TypeScript types); verified bit-exact under Node |
-| Tri-target parity + CI/release | ✅ native == python == wasm (golden `expected.jsonl`); CI matrix + tag/dispatch publish automation |
-| **SNC decode** | ✅ decoded **directly**, empirically validated for Mudra Link (16-bit, ~834 Hz); no official lib/oracle (see [docs/DECODE_VERIFICATION.md](docs/DECODE_VERIFICATION.md)) |
-
-> Target is the **retail Mudra Link** (~834 Hz / 16-bit — the vendor-confirmed limit).
-> The 2080 Hz figure is a **separate product, Mudra Pro**, a future target that slots in
-> as a new `IDecoder` — see [docs/CONTEXT.md](docs/CONTEXT.md).
-
-## Layout
-
-```
-include/mudraka/   public headers          src/        core implementation
-tests/             doctest suite           bindings/   python (nanobind) + wasm (embind)
-tools/             BLE capture (bleak)      fixtures/   recorded test sessions
-docs/              design docs (indexed by docs/README.md)
-```
-
-## Build & test (native)
+## Python
 
 ```sh
-cmake -S . -B build -G Ninja -DMUDRAKA_BUILD_TESTS=ON
-cmake --build build
-ctest --test-dir build --output-on-failure      # or: ./build/tests/mudraka_tests
-```
-
-## Python wheel
-
-```sh
-pip install .            # scikit-build-core + nanobind; needs a C++17 compiler
+pip install mudraka
 ```
 ```python
 import numpy as np
 from mudraka import Stream, Config
+
 s = Stream(Config())
 s.feed(notification_bytes, recv_time_s)          # one BLE notification per call
 out = np.empty((3, 4096), dtype=np.int32)
-written, cursor, lost = s.latest_into(out)       # zero-copy into `out`
+written, cursor, lost = s.latest_into(out)       # zero-copy into `out`; lost > 0 = ring overwrote unread
 ```
 
-## WASM (npm)
-
-Published as [`mudraka`](https://www.npmjs.com/package/mudraka) for the browser (Web
-Bluetooth), Workers, and Node — **`npm install mudraka`**. JS/TS usage, Web Bluetooth
-wiring, and bundler `.wasm` notes are in [npm/README.md](npm/README.md) (the package's
-own README); types ship in [npm/mudraka.d.ts](npm/mudraka.d.ts).
-
-To build the artifacts locally (needs the Emscripten toolchain):
+## JavaScript / TypeScript
 
 ```sh
-emcmake cmake -S . -B build-wasm -DMUDRAKA_BUILD_WASM=ON -DMUDRAKA_BUILD_TESTS=OFF
-cmake --build build-wasm                         # -> mudraka.js + mudraka.wasm
-node tools/verify_wasm.mjs                        # end-to-end golden parity check
+npm install mudraka
+```
+```js
+import createMudraka from "mudraka";
+
+const M = await createMudraka();
+const CH = 3, MAX = 256;
+const stream = new M.Stream(M.makeConfig(CH, 834, 4)); // 3ch, ~834 Hz, 4 s ring
+
+const ptr = M._malloc(CH * MAX * 4), base = ptr >> 2;  // channel-major int32 in WASM heap
+let cursor = 0;
+
+function onNotification(bytes, recvTimeS) {            // bytes = Uint8Array
+  stream.feed(bytes, recvTimeS);
+  const r = stream.pullInto(cursor, ptr, MAX);
+  for (let i = 0; i < r.written; i++) {
+    const ulnar = M.HEAP32[base + 0 * MAX + i];        // + median, radial at 1*, 2*
+  }
+  cursor = r.next_cursor;                              // r.lost > 0 = ring overwrote unread
+}
+// M._free(ptr); stream.delete();  when done
 ```
 
-## Recording fixtures
+Web Bluetooth wiring, the bundler `.wasm` note, and the full JS API are in
+[npm/README.md](npm/README.md).
 
-See [tools/README.md](tools/README.md) — `capture_session.py` records a full BLE
-session from a real band.
+## Build from source (native)
+
+```sh
+cmake -S . -B build -G Ninja -DMUDRAKA_BUILD_TESTS=ON
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+Design docs are in **[docs/](docs/README.md)** (start with
+[docs/CONTEXT.md](docs/CONTEXT.md)). SNC decode details:
+[docs/DECODE_VERIFICATION.md](docs/DECODE_VERIFICATION.md).
 
 ## Acknowledgements
 
-- [Prodilink](https://github.com/JayTheProdigy16/Prodilink) — reverse-engineering
+- [Prodilink](https://github.com/JayTheProdigy16/Prodilink) : reverse-engineering
   reference for the Mudra Link BLE protocol.
