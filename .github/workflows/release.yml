@@ -1,6 +1,8 @@
-# Tag-driven release. Push a `vX.Y.Z` tag → gate on the test matrix, then publish the
-# Python wheels/sdist to PyPI and the WASM package to npm. The git tag is the single
-# source of version truth (stamped into pyproject.toml + npm/package.json at build time).
+# Release. Two ways in, same pipeline: push a `vX.Y.Z` tag, OR run this workflow from
+# the Actions UI and pick a bump (patch/minor) — the `version` job then derives the next
+# version from the latest tag and creates it. Major bumps: tag by hand. Either way the
+# git tag is the single source of version truth (stamped into pyproject.toml +
+# npm/package.json at build time). Publishing is gated on the full test matrix.
 #
 # One-time setup required (outside this repo) — both are token-less OIDC Trusted Publishing:
 #   - PyPI: configure a Trusted Publisher for project `mudraka` → this repo, workflow
@@ -13,13 +15,52 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump (from the latest tag). Major: tag by hand."
+        type: choice
+        options: [patch, minor]
+        default: patch
 
 jobs:
+  # Resolve the release version and ensure a matching git tag exists. On a tag push the
+  # version comes from the ref; on manual dispatch we bump the latest tag and create it.
+  version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # push the new tag on manual dispatch
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need existing tags to compute the next one
+      - id: v
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            latest=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+            latest=${latest:-v0.0.0}
+            IFS=. read -r MA MI PA <<< "${latest#v}"
+            case "${{ inputs.bump }}" in
+              minor) MI=$((MI + 1)); PA=0 ;;
+              patch) PA=$((PA + 1)) ;;
+            esac
+            ver="$MA.$MI.$PA"
+            git tag "v$ver"
+            git push origin "v$ver"
+          else
+            ver="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+          echo "Release version: $ver"
+
   test:
     uses: ./.github/workflows/ci.yml
 
   wheels:
-    needs: test
+    needs: [version, test]
     strategy:
       fail-fast: false
       matrix:
@@ -30,9 +71,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Stamp version from tag
+      - name: Stamp version
         shell: bash
-        run: python tools/stamp_version.py "${GITHUB_REF_NAME#v}"
+        run: python tools/stamp_version.py "${{ needs.version.outputs.version }}"
       - name: Build wheels
         shell: bash
         run: pipx run cibuildwheel --output-dir dist
@@ -42,15 +83,15 @@ jobs:
           path: dist/*.whl
 
   sdist:
-    needs: test
+    needs: [version, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Stamp version from tag
-        run: python tools/stamp_version.py "${GITHUB_REF_NAME#v}"
+      - name: Stamp version
+        run: python tools/stamp_version.py "${{ needs.version.outputs.version }}"
       - name: Build sdist
         run: pipx run build --sdist --outdir dist
       - uses: actions/upload-artifact@v4
@@ -73,7 +114,7 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
 
   publish-npm:
-    needs: test
+    needs: [version, test]
     runs-on: ubuntu-latest
     environment: npm  # must match the npm Trusted Publisher's configured environment
     permissions:
@@ -97,6 +138,6 @@ jobs:
       - name: Assemble package
         run: |
           cp build-wasm/bindings/wasm/mudraka.js build-wasm/bindings/wasm/mudraka.wasm README.md npm/
-          cd npm && npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
+          cd npm && npm version "${{ needs.version.outputs.version }}" --no-git-tag-version --allow-same-version
       - name: Publish (OIDC, provenance auto)
         run: cd npm && npm publish --access public
