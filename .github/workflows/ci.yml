@@ -1,0 +1,59 @@
+# Test matrix: the three targets all decode the committed fixture corpus and must
+# match the golden expected.jsonl bit-exact (docs/TEST_STRATEGY.md).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure & build (tests)
+        run: cmake -S . -B build -DMUDRAKA_BUILD_TESTS=ON
+      - run: cmake --build build
+      - name: ctest (native decode + golden parity)
+        run: ctest --test-dir build --output-on-failure
+
+  python:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install wheel + test deps
+        run: pip install . pytest numpy
+      - name: pytest (golden parity via nanobind)
+        run: pytest python/tests -q
+
+  wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 6.0.1  # pinned — docs/BUILD.md
+      - name: Build WASM
+        run: |
+          emcmake cmake -S . -B build-wasm -DMUDRAKA_BUILD_WASM=ON -DMUDRAKA_BUILD_TESTS=OFF
+          cmake --build build-wasm
+      - name: Node golden parity (all fixtures)
+        run: |
+          for d in fixtures/sessions/*/; do
+            node tools/verify_wasm.mjs "$d"
+          done

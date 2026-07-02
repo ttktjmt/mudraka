@@ -16,9 +16,9 @@ oracle). WASM binding written but unbuilt. See `README.md` / `docs/README.md`.
       `MUDRAKA_REGEN_GOLDEN=1`). native `tests/test_parity.cpp`, python
       `python/tests/test_parity.py`, wasm `tools/verify_wasm.mjs` all assert bit-exact
       (snc_ts + samples). All pass. (`docs/TEST_STRATEGY.md`.)
-- [ ] **CI — test matrix** — GitHub Actions on push/PR: native (cmake+ctest), Python
-      (cibuildwheel), WASM (emsdk 6.0.1 + `node tools/verify_wasm.mjs`), all running the
-      committed fixture corpus. Emscripten pinned via `emsdk activate 6.0.1`.
+- [x] **CI — test matrix** — `.github/workflows/ci.yml`: native (cmake+ctest, ubuntu+macos),
+      python (pip install . + pytest, ubuntu+macos), wasm (setup-emsdk 6.0.1 + node parity,
+      ubuntu), all on the committed fixture corpus. Mirrors the locally-green commands.
 - [ ] **CI — release automation (tag-driven)** — single source of version truth, then
       publish on a `v*` git tag:
       - **Version control**: one authoritative version (git tag → derived into
