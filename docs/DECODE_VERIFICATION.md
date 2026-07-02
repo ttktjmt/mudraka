@@ -31,10 +31,11 @@ This is the gate: the above already pass (native + Python verified). The decode 
 
 - **Channel order** — we label the three channels `[ulnar, median, radial]` (per the
   spec); which physical electrode maps to which is a *labeling* assumption, not a decode
-  correctness issue (the integer values are order-independent). Optional free
-  cross-check: the friend's existing layer-B recording (`tmp/teleop_*.h5`, values
-  ≈ raw/32768) can sanity-check channel identity — no device or lib needed. Confirm if
-  channel identity ever matters downstream.
+  correctness issue (the integer values are order-independent). No cross-check is planned:
+  external recordings are a different session (no sample alignment) and the earlier
+  friend's-h5 idea is dropped (2026-07-02). Revisit **only if** a downstream consumer needs
+  physical channel identity — then record a purpose-built session with a known
+  per-channel gesture using `tools/capture_session.py` and confirm from that.
 
 ## What was dropped and why
 
@@ -47,3 +48,6 @@ decodes directly, so none of it is needed. `tools/oracle_harness.py` was deleted
 - **2026-07-02** — Direct decode; no official lib / license / oracle. Correctness rests
   on empirical structure + lossless round-trip + real-fixture tests + tri-target parity.
   Decode accepted for Mudra Link.
+- **2026-07-02** — Channel-order cross-check via the friend's `teleop_*.h5` dropped
+  (different session, no sample alignment). Order stays a labeling assumption; revisit
+  only if a downstream consumer needs physical channel identity.

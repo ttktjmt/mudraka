@@ -1,8 +1,12 @@
 # TODO — mudraka
 
-State: native core + Python (nanobind) built & verified against real captures; SNC
-decode accepted for **retail Mudra Link** (~834 Hz / 16-bit, decoded directly — no
-oracle). WASM binding written but unbuilt. See `README.md` / `docs/README.md`.
+State: all three targets (native / Python wheel / WASM npm) built, verified **bit-exact**
+against real captures, and **released** (`mudraka` 0.1.1 on PyPI + npm). CI test matrix +
+tag/dispatch release automation are live. SNC decode accepted for **retail Mudra Link**
+(~834 Hz / 16-bit, decoded directly — no oracle). See `README.md` / `docs/README.md`.
+
+Everything left below is **hardware-gated** (needs a real band to capture) — no
+code-only work remains.
 
 ## Next (highest value first)
 
@@ -31,11 +35,14 @@ oracle). WASM binding written but unbuilt. See `README.md` / `docs/README.md`.
 
 ## Fixtures
 
-- [ ] Capture the rest of the coverage matrix with `tools/capture_session.py`:
+- [ ] **(hardware)** Capture the rest of the coverage matrix with `tools/capture_session.py`:
       `{16bit,24bit} × {nerve_ulnar, nerve_median, nerve_radial}` (have: strong_contraction + rest).
       (Note: 16/24bit decode identically — kept only for provenance.)
-- [ ] Confirm channel order `[ulnar,median,radial]` (labeling only) — optional
-      cross-check vs the friend's `tmp/teleop_*.h5` layer-B floats. `docs/DECODE_VERIFICATION.md`.
+- [x] Channel order `[ulnar,median,radial]` is a **labeling assumption** (the decode is
+      order-independent, so this is not a correctness issue). The friend's-h5 cross-check is
+      **dropped** (2026-07-02). Revisit only if a downstream consumer needs physical channel
+      identity — then confirm with a purpose-recorded session in this repo's own capture
+      format. `docs/DECODE_VERIFICATION.md`.
 
 ## Packaging / housekeeping
 
