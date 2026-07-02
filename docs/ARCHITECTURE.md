@@ -102,10 +102,14 @@ uint64_t total_overwritten;  // cumulative samples overwritten before being pull
   keeps up and/or sizes the ring, and reads `total_overwritten` to detect gaps.
   mudraka offers no blocking mode.
 
-## Pending (next nodes)
-- `ClockModel` API + nominal rate (note the 2080 vs ~1000 Hz discrepancy to resolve).
-- `StreamProfile` fields & defaults.
-- Threading model details (reentrancy; mudraka spawns no threads).
+## Deferred (not built yet — no code-only work pending)
+- **RingBuffer concurrent-read overrun re-check** — current code assumes the consumer
+  keeps up (fine for the streaming use). Harden only if a real lagging-reader race shows
+  up (`src/ring_buffer.cpp`).
+- **Mudra Pro** (higher-rate product) — add only when hardware exists: a new `IDecoder`
+  + config, nothing else (`CONTEXT.md`). No Pro code now.
+- **Fixture coverage matrix** — capture `{16bit,24bit} × {nerve_ulnar, median, radial}`
+  when a real band is available (`CAPTURE_FIXTURE_FORMAT.md`).
 
 ## Decision log
 - **2026-06-25** — Decoder→buffer seam = push-to-`SampleSink` + small
