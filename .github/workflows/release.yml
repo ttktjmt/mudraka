@@ -1,0 +1,98 @@
+# Tag-driven release. Push a `vX.Y.Z` tag → gate on the test matrix, then publish the
+# Python wheels/sdist to PyPI and the WASM package to npm. The git tag is the single
+# source of version truth (stamped into pyproject.toml + npm/package.json at build time).
+#
+# One-time setup required (outside this repo):
+#   - PyPI: configure a Trusted Publisher for project `mudraka` pointing at this repo +
+#     workflow `release.yml` (no API token needed; uses OIDC).
+#   - npm: add repo secret `NPM_TOKEN` (an npm automation token with publish rights).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  wheels:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stamp version from tag
+        shell: bash
+        run: python tools/stamp_version.py "${GITHUB_REF_NAME#v}"
+      - name: Build wheels
+        shell: bash
+        run: pipx run cibuildwheel --output-dir dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.os }}
+          path: dist/*.whl
+
+  sdist:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Stamp version from tag
+        run: python tools/stamp_version.py "${GITHUB_REF_NAME#v}"
+      - name: Build sdist
+        run: pipx run build --sdist --outdir dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-sdist
+          path: dist/*.tar.gz
+
+  publish-pypi:
+    needs: [wheels, sdist]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # PyPI Trusted Publishing (OIDC)
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: dist-*
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  publish-npm:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # npm provenance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 6.0.1  # pinned — docs/BUILD.md
+      - name: Build WASM
+        run: |
+          emcmake cmake -S . -B build-wasm -DMUDRAKA_BUILD_WASM=ON -DMUDRAKA_BUILD_TESTS=OFF
+          cmake --build build-wasm
+      - name: Assemble package
+        run: |
+          cp build-wasm/bindings/wasm/mudraka.js build-wasm/bindings/wasm/mudraka.wasm README.md npm/
+          cd npm && npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
+      - name: Publish
+        run: cd npm && npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

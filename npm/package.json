@@ -1,0 +1,13 @@
+{
+  "name": "mudraka",
+  "version": "0.1.0",
+  "description": "C++ sEMG engine for Mudra Link raw SNC decoding — WASM/embind build.",
+  "license": "Apache-2.0",
+  "author": "ttktjmt",
+  "homepage": "https://github.com/ttktjmt/mudraka",
+  "repository": { "type": "git", "url": "git+https://github.com/ttktjmt/mudraka.git" },
+  "bugs": { "url": "https://github.com/ttktjmt/mudraka/issues" },
+  "main": "mudraka.js",
+  "files": ["mudraka.js", "mudraka.wasm", "README.md"],
+  "keywords": ["emg", "semg", "mudra", "mudra-link", "wasm", "bci", "sensor"]
+}

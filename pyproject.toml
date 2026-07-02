@@ -10,8 +10,9 @@ version = "0.1.0"
 description = "C++ sEMG engine for Mudra Link raw SNC decoding"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "TBD" }
+license = { text = "Apache-2.0" }
 authors = [{ name = "ttktjmt" }]
+classifiers = ["License :: OSI Approved :: Apache Software License"]
 dependencies = []
 
 [project.optional-dependencies]

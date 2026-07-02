@@ -49,8 +49,20 @@ truth, three thin shells).
 Rationale: vcpkg/Conan would be overkill for so few deps and would force extra
 tooling on contributors; `FetchContent` is CMake-native and pin-reproducible.
 
+## Release & versioning (decision 2026-07-02)
+
+Tag-driven (`.github/workflows/release.yml`): pushing `vX.Y.Z` gates on the test
+matrix, then publishes. **The git tag is the single source of version truth** —
+stamped into `pyproject.toml` (`tools/stamp_version.py`) and `npm/package.json`
+(`npm version`) at build time, so the wheel and npm package never drift. PyPI uses
+cibuildwheel + **Trusted Publishing** (OIDC, no stored token); npm uses
+`npm publish --provenance` (`NPM_TOKEN`). Both require one-time PyPI/npm setup (see the
+workflow header). License: **Apache-2.0** (repo `LICENSE`).
+
 ## Decision log
 - **2026-06-25** — Single-root CMake; `mudraka_core` reused by all targets via
   composable `MUDRAKA_BUILD_{TESTS,PYTHON,WASM}` options.
+- **2026-07-02** — Tag-driven release; git tag = single version source (stamped into
+  pyproject + package.json); PyPI Trusted Publishing + npm provenance; Apache-2.0.
 - **2026-06-25** — Core zero-dep; test deps via pinned FetchContent (doctest,
   nlohmann/json); nanobind via pip; Emscripten external. No vcpkg/Conan.

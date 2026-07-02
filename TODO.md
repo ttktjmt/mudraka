@@ -19,16 +19,14 @@ oracle). WASM binding written but unbuilt. See `README.md` / `docs/README.md`.
 - [x] **CI — test matrix** — `.github/workflows/ci.yml`: native (cmake+ctest, ubuntu+macos),
       python (pip install . + pytest, ubuntu+macos), wasm (setup-emsdk 6.0.1 + node parity,
       ubuntu), all on the committed fixture corpus. Mirrors the locally-green commands.
-- [ ] **CI — release automation (tag-driven)** — single source of version truth, then
-      publish on a `v*` git tag:
-      - **Version control**: one authoritative version (git tag → derived into
-        `pyproject.toml` + npm `package.json`, e.g. `setuptools-scm` / a small sync step)
-        so native/py/wasm never drift. Tag `vX.Y.Z` is the trigger.
-      - **PyPI**: cibuildwheel matrix → upload wheels + sdist via **Trusted Publishing**
-        (OIDC, no stored token).
-      - **npm**: build WASM (emsdk 6.0.1) → `npm publish` the packaged `.js`+`.wasm`
-        (needs the npm `package.json` TODO below) via `NPM_TOKEN` / OIDC provenance.
-      - Gate both on the test matrix passing first.
+- [x] **CI — release automation (tag-driven)** — `.github/workflows/release.yml`: on a
+      `v*` tag, gate on the test matrix (`ci.yml` via `workflow_call`), then publish.
+      Version single-source = the git tag, stamped into `pyproject.toml`
+      (`tools/stamp_version.py`) + `npm/package.json` (`npm version`). PyPI via
+      cibuildwheel (ubuntu/macos/windows) + sdist → **Trusted Publishing** (OIDC).
+      npm via emsdk 6.0.1 build → `npm publish --provenance`.
+      **One-time setup still required (user):** PyPI Trusted Publisher for `mudraka` →
+      this repo/`release.yml`; repo secret `NPM_TOKEN`. Then push a `vX.Y.Z` tag.
 
 ## Fixtures
 
@@ -40,8 +38,9 @@ oracle). WASM binding written but unbuilt. See `README.md` / `docs/README.md`.
 
 ## Packaging / housekeeping
 
-- [ ] Repo `LICENSE` + set `pyproject.toml` license (currently "TBD").
-- [ ] npm `package.json` wrapping the WASM build for mudra-web-viewer to consume.
+- [x] Repo `LICENSE` (Apache-2.0) + `pyproject.toml` license set.
+- [x] npm `package.json` (`npm/`) wrapping the WASM build for mudra-web-viewer to
+      consume; artifacts + README copied in at publish time (`npm pack` verified).
 
 ## Later / do not build yet
 

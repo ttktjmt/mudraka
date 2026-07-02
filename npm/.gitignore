@@ -1,0 +1,4 @@
+# Build artifacts copied in at publish time (see .github/workflows/release.yml).
+mudraka.js
+mudraka.wasm
+README.md
