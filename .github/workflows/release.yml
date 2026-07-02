@@ -2,10 +2,12 @@
 # Python wheels/sdist to PyPI and the WASM package to npm. The git tag is the single
 # source of version truth (stamped into pyproject.toml + npm/package.json at build time).
 #
-# One-time setup required (outside this repo):
-#   - PyPI: configure a Trusted Publisher for project `mudraka` pointing at this repo +
-#     workflow `release.yml` (no API token needed; uses OIDC).
-#   - npm: add repo secret `NPM_TOKEN` (an npm automation token with publish rights).
+# One-time setup required (outside this repo) — both are token-less OIDC Trusted Publishing:
+#   - PyPI: configure a Trusted Publisher for project `mudraka` → this repo, workflow
+#     `release.yml`, environment `pypi`.
+#   - npm: publish `mudraka` once manually to create the package (see docs/BUILD.md), then
+#     add a Trusted Publisher in the package settings → GitHub Actions, this repo,
+#     workflow `release.yml` (no environment). No NPM_TOKEN needed.
 name: Release
 
 on:
@@ -74,13 +76,16 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # npm provenance
+      id-token: write  # npm Trusted Publishing (OIDC) + automatic provenance
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
+      - name: Upgrade npm (Trusted Publishing needs >= 11.5.1)
+        run: npm install -g npm@latest
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: 6.0.1  # pinned — docs/BUILD.md
@@ -92,7 +97,5 @@ jobs:
         run: |
           cp build-wasm/bindings/wasm/mudraka.js build-wasm/bindings/wasm/mudraka.wasm README.md npm/
           cd npm && npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
-      - name: Publish
-        run: cd npm && npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish (OIDC, provenance auto)
+        run: cd npm && npm publish --access public

@@ -24,9 +24,10 @@ oracle). WASM binding written but unbuilt. See `README.md` / `docs/README.md`.
       Version single-source = the git tag, stamped into `pyproject.toml`
       (`tools/stamp_version.py`) + `npm/package.json` (`npm version`). PyPI via
       cibuildwheel (ubuntu/macos/windows) + sdist → **Trusted Publishing** (OIDC).
-      npm via emsdk 6.0.1 build → `npm publish --provenance`.
-      **One-time setup still required (user):** PyPI Trusted Publisher for `mudraka` →
-      this repo/`release.yml`; repo secret `NPM_TOKEN`. Then push a `vX.Y.Z` tag.
+      npm via emsdk 6.0.1 build → `npm publish` (OIDC Trusted Publishing, provenance auto).
+      **One-time setup still required (user, both token-less OIDC):** PyPI Trusted Publisher
+      (`mudraka` → this repo/`release.yml`/env `pypi`); npm — bootstrap-publish `mudraka`
+      once locally, then add its Trusted Publisher. See `docs/BUILD.md`. Then push `vX.Y.Z`.
 
 ## Fixtures
 

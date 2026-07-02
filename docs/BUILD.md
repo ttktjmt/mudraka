@@ -55,9 +55,26 @@ Tag-driven (`.github/workflows/release.yml`): pushing `vX.Y.Z` gates on the test
 matrix, then publishes. **The git tag is the single source of version truth** —
 stamped into `pyproject.toml` (`tools/stamp_version.py`) and `npm/package.json`
 (`npm version`) at build time, so the wheel and npm package never drift. PyPI uses
-cibuildwheel + **Trusted Publishing** (OIDC, no stored token); npm uses
-`npm publish --provenance` (`NPM_TOKEN`). Both require one-time PyPI/npm setup (see the
-workflow header). License: **Apache-2.0** (repo `LICENSE`).
+cibuildwheel + **Trusted Publishing** (OIDC, no stored token); npm also uses
+**Trusted Publishing** (OIDC — no `NPM_TOKEN`; provenance auto). License: **Apache-2.0**
+(repo `LICENSE`).
+
+**One-time setup (token-less, both OIDC):**
+- **PyPI** — add a Trusted Publisher for project `mudraka`: repo `ttktjmt/mudraka`,
+  workflow `release.yml`, environment `pypi`. (Supports a *pending* publisher, so this
+  can be done before the first release.)
+- **npm** — npm Trusted Publishing is configured in the **package's** settings, so the
+  package must exist first. **Bootstrap once, locally:**
+  ```bash
+  source ~/emsdk/emsdk_env.sh
+  emcmake cmake -S . -B build-wasm -DMUDRAKA_BUILD_WASM=ON -DMUDRAKA_BUILD_TESTS=OFF
+  cmake --build build-wasm
+  cp build-wasm/bindings/wasm/mudraka.js build-wasm/bindings/wasm/mudraka.wasm README.md npm/
+  cd npm && npm login && npm publish --access public   # creates mudraka@0.1.0 (no provenance locally)
+  ```
+  Then on npmjs.com → package `mudraka` → Settings → **Trusted Publisher** → GitHub
+  Actions: repo `ttktjmt/mudraka`, workflow `release.yml` (leave environment blank).
+  After that, every `vX.Y.Z` tag publishes via OIDC with provenance — no local step.
 
 ## Decision log
 - **2026-06-25** — Single-root CMake; `mudraka_core` reused by all targets via
