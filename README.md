@@ -70,3 +70,8 @@ cmake --build build-wasm                         # -> mudraka.js + mudraka.wasm
 
 See [tools/README.md](tools/README.md) — `capture_session.py` records a full BLE
 session from a real band.
+
+## Acknowledgements
+
+- [Prodilink](https://github.com/JayTheProdigy16/Prodilink) — reverse-engineering
+  reference for the Mudra Link BLE protocol.
