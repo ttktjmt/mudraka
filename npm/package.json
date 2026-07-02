@@ -8,6 +8,7 @@
   "repository": { "type": "git", "url": "git+https://github.com/ttktjmt/mudraka.git" },
   "bugs": { "url": "https://github.com/ttktjmt/mudraka/issues" },
   "main": "mudraka.js",
-  "files": ["mudraka.js", "mudraka.wasm", "README.md"],
+  "types": "mudraka.d.ts",
+  "files": ["mudraka.js", "mudraka.wasm", "mudraka.d.ts", "README.md"],
   "keywords": ["emg", "semg", "mudra", "mudra-link", "wasm", "bci", "sensor"]
 }

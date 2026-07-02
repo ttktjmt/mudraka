@@ -20,8 +20,9 @@ One C++ core fans out to two distributions: **npm** (Emscripten→WASM) and **Py
 | Part | State |
 |------|-------|
 | Native C++ core (decoder, ring, clock, stream, diagnostics) | ✅ implemented, tested against real captures (22k+ assertions) |
-| Python binding (nanobind) | ✅ builds & verified end-to-end on real fixtures |
-| WASM binding (Embind) | ✅ written & CMake-wired (build needs the Emscripten toolchain) |
+| Python binding (nanobind) | ✅ **published to [PyPI](https://pypi.org/project/mudraka/)**; verified bit-exact on real fixtures |
+| WASM binding (Embind) | ✅ **published to [npm](https://www.npmjs.com/package/mudraka)** (with TypeScript types); verified bit-exact under Node |
+| Tri-target parity + CI/release | ✅ native == python == wasm (golden `expected.jsonl`); CI matrix + tag/dispatch publish automation |
 | **SNC decode** | ✅ decoded **directly**, empirically validated for Mudra Link (16-bit, ~834 Hz); no official lib/oracle (see [docs/DECODE_VERIFICATION.md](docs/DECODE_VERIFICATION.md)) |
 
 > Target is the **retail Mudra Link** (~834 Hz / 16-bit — the vendor-confirmed limit).
@@ -61,9 +62,17 @@ written, cursor, lost = s.latest_into(out)       # zero-copy into `out`
 
 ## WASM (npm)
 
+Published as [`mudraka`](https://www.npmjs.com/package/mudraka) for the browser (Web
+Bluetooth), Workers, and Node — **`npm install mudraka`**. JS/TS usage, Web Bluetooth
+wiring, and bundler `.wasm` notes are in [npm/README.md](npm/README.md) (the package's
+own README); types ship in [npm/mudraka.d.ts](npm/mudraka.d.ts).
+
+To build the artifacts locally (needs the Emscripten toolchain):
+
 ```sh
 emcmake cmake -S . -B build-wasm -DMUDRAKA_BUILD_WASM=ON -DMUDRAKA_BUILD_TESTS=OFF
 cmake --build build-wasm                         # -> mudraka.js + mudraka.wasm
+node tools/verify_wasm.mjs                        # end-to-end golden parity check
 ```
 
 ## Recording fixtures

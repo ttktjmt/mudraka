@@ -137,7 +137,7 @@ jobs:
           cmake --build build-wasm
       - name: Assemble package
         run: |
-          cp build-wasm/bindings/wasm/mudraka.js build-wasm/bindings/wasm/mudraka.wasm README.md npm/
+          cp build-wasm/bindings/wasm/mudraka.js build-wasm/bindings/wasm/mudraka.wasm npm/
           cd npm && npm version "${{ needs.version.outputs.version }}" --no-git-tag-version --allow-same-version
       - name: Publish (OIDC, provenance auto)
         run: cd npm && npm publish --access public

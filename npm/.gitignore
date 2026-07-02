@@ -1,4 +1,4 @@
-# Build artifacts copied in at publish time (see .github/workflows/release.yml).
+# WASM build artifacts copied in at publish time (see .github/workflows/release.yml).
+# README.md and mudraka.d.ts are committed and published as-is.
 mudraka.js
 mudraka.wasm
-README.md
