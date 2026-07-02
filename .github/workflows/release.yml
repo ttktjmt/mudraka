@@ -24,14 +24,17 @@ on:
         default: patch
 
 jobs:
-  # Resolve the release version and ensure a matching git tag exists. On a tag push the
-  # version comes from the ref; on manual dispatch we bump the latest tag and create it.
+  # Resolve the release version and the commit to build/tag. On a tag push the version
+  # comes from the ref. On manual dispatch we bump the latest tag, stamp the version into
+  # pyproject.toml + npm/package.json, commit that back to the branch, and tag it — so the
+  # repo always reflects the released version (the tag stays the single source of truth).
   version:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # push the new tag on manual dispatch
+      contents: write  # push the version-bump commit + tag on manual dispatch
     outputs:
       version: ${{ steps.v.outputs.version }}
+      sha: ${{ steps.v.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,13 +51,20 @@ jobs:
               patch) PA=$((PA + 1)) ;;
             esac
             ver="$MA.$MI.$PA"
+            python3 tools/stamp_version.py "$ver"   # bump pyproject.toml + npm/package.json
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "chore(release): v$ver"
             git tag "v$ver"
-            git push origin "v$ver"
+            git push origin "HEAD:${GITHUB_REF_NAME}" "v$ver"  # commit back to the branch + tag it
+            sha=$(git rev-parse HEAD)
           else
             ver="${GITHUB_REF_NAME#v}"
+            sha="$GITHUB_SHA"
           fi
           echo "version=$ver" >> "$GITHUB_OUTPUT"
-          echo "Release version: $ver"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Release $ver @ $sha"
 
   test:
     uses: ./.github/workflows/ci.yml
@@ -68,6 +78,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}  # the version-bump commit (dispatch) or the tagged commit
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -87,6 +99,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -122,6 +136,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: "20"

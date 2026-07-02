@@ -53,10 +53,14 @@ tooling on contributors; `FetchContent` is CMake-native and pin-reproducible.
 
 Two ways in (`.github/workflows/release.yml`), same pipeline gated on the test matrix:
 push a `vX.Y.Z` tag, **or** run the workflow from the Actions UI and pick a bump
-(`patch`/`minor`) — the `version` job derives the next version from the latest tag and
-creates it. Major bumps: tag by hand (`git tag v2.0.0 && git push --tags`). **The git tag is the single source of version truth** —
-stamped into `pyproject.toml` (`tools/stamp_version.py`) and `npm/package.json`
-(`npm version`) at build time, so the wheel and npm package never drift. PyPI uses
+(`patch`/`minor`). On a **manual dispatch** the `version` job derives the next version from
+the latest tag, stamps it into `pyproject.toml` + `npm/package.json`
+(`tools/stamp_version.py`), **commits that back to the branch, and tags the commit** — so
+the repo always shows the released version. The downstream build/publish jobs check out
+that exact commit. Major bumps: tag by hand (`git tag v2.0.0 && git push --tags`) — a raw
+tag push builds from the tagged commit and stamps the version into the artifacts at build
+time (it does **not** commit version files back; use the UI buttons for that). **The git
+tag is the single source of version truth.** PyPI uses
 cibuildwheel + **Trusted Publishing** (OIDC, no stored token); npm also uses
 **Trusted Publishing** (OIDC — no `NPM_TOKEN`; provenance auto). License: **Apache-2.0**
 (repo `LICENSE`).
