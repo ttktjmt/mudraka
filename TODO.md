@@ -11,9 +11,11 @@ oracle). WASM binding written but unbuilt. See `README.md` / `docs/README.md`.
       then `node tools/verify_wasm.mjs [fixture]` feeds SNC frames + drains via `feed`/`pullInto`
       and asserts head==frames*18, malformed==0, non-zero signal. All 3 fixtures pass.
       (Needed `-sENVIRONMENT=…,node` in `bindings/wasm/CMakeLists.txt` so the artifact loads under Node.)
-- [ ] **Tri-target parity, automated** — commit `expected.jsonl` = native reference
-      decode per fixture; add python + wasm tests that assert bit-exact vs it.
-      (`docs/TEST_STRATEGY.md`; native tests already pass.)
+- [x] **Tri-target parity, automated** — `expected.jsonl` committed per fixture
+      (per-notification golden, native = reference & sole generator via
+      `MUDRAKA_REGEN_GOLDEN=1`). native `tests/test_parity.cpp`, python
+      `python/tests/test_parity.py`, wasm `tools/verify_wasm.mjs` all assert bit-exact
+      (snc_ts + samples). All pass. (`docs/TEST_STRATEGY.md`.)
 - [ ] **CI — test matrix** — GitHub Actions on push/PR: native (cmake+ctest), Python
       (cibuildwheel), WASM (emsdk 6.0.1 + `node tools/verify_wasm.mjs`), all running the
       committed fixture corpus. Emscripten pinned via `emsdk activate 6.0.1`.

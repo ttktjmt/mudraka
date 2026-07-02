@@ -48,6 +48,11 @@ class StreamWrap {
   double channels() const { return ch_; }
   double estimated_rate_hz() const { return s_->stats().estimated_rate_hz; }
   double malformed_frames() const { return static_cast<double>(s_->stats().malformed_frames); }
+  // Device-clock microseconds of the last decoded notification (-1 if none yet).
+  double last_device_time_us() const {
+    auto v = s_->stats().last_device_time_us;
+    return v ? static_cast<double>(*v) : -1.0;
+  }
   double total_overwritten() const { return static_cast<double>(s_->stats().total_overwritten); }
   double timestamp(double i) const { return s_->timestamp(static_cast<uint64_t>(i)); }
 
@@ -78,6 +83,7 @@ EMSCRIPTEN_BINDINGS(mudraka) {
       .function("channels", &StreamWrap::channels)
       .function("estimatedRateHz", &StreamWrap::estimated_rate_hz)
       .function("malformedFrames", &StreamWrap::malformed_frames)
+      .function("lastDeviceTimeUs", &StreamWrap::last_device_time_us)
       .function("totalOverwritten", &StreamWrap::total_overwritten)
       .function("timestamp", &StreamWrap::timestamp);
 }

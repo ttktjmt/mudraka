@@ -18,7 +18,8 @@ add_executable(mudraka_tests
   test_decoder.cpp
   test_ring_buffer.cpp
   test_clock_model.cpp
-  test_stream.cpp)
+  test_stream.cpp
+  test_parity.cpp)
 target_link_libraries(mudraka_tests
   PRIVATE mudraka_core doctest::doctest nlohmann_json::nlohmann_json)
 target_compile_definitions(mudraka_tests
