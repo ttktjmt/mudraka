@@ -1,5 +1,8 @@
 # mudraka
 
+[![PyPI](https://img.shields.io/pypi/v/mudraka?logo=pypi&logoColor=white)](https://pypi.org/project/mudraka/)
+[![npm](https://img.shields.io/npm/v/mudraka?logo=npm)](https://www.npmjs.com/package/mudraka)
+
 A transport-agnostic **C++17 engine** that decodes the Mudra Link wristband's raw
 surface-EMG (SNC) stream into samples, buffers them, and serves them for real-time
 use. It is the shared core of three projects (this repo is **mudraka only**):
